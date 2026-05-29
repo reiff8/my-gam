@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分數變形記：擴分魔法鏡</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fef2f2 0%, #f5f3ff 100%);
+        }
+        .fraction-line {
+            height: 3px;
+            background-color: #4b5563;
+            width: 100%;
+            margin: 4px 0;
+        }
+        .magic-glow {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+            animation: borderPulse 2s infinite;
+        }
+        @keyframes borderPulse {
+            0%, 100% { border-color: #c084fc; }
+            50% { border-color: #ec4899; }
+        }
+        .visual-block {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 md:p-6 select-none">
+
+    <div class="w-full max-w-4xl bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 border border-pink-100">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">✨</span>
+            <div>
+                <h1 class="text-xl font-bold text-purple-800">分數變形記：擴分魔法鏡</h1>
+                <p class="text-xs text-gray-500">庭瑄的專屬代數基本功修練場</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-6 w-full md:w-auto">
+            <div class="flex-1 md:w-48 bg-gray-100 h-3 rounded-full overflow-hidden">
+                <div id="progressBar" class="bg-gradient-to-r from-pink-400 to-purple-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+            <div class="text-sm font-bold text-purple-600 shrink-0">
+                關卡進度: <span id="currentRound">1</span>/10
+            </div>
+            <div class="text-sm font-bold text-pink-600 shrink-0">
+                魔法值: <span id="score">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-6 my-6 flex-1 items-center">
+        
+        <div class="lg:col-span-5 bg-white rounded-3xl p-6 shadow-lg border border-purple-100 flex flex-col h-full justify-between min-h-[320px]">
+            <div>
+                <h2 class="text-lg font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    🔮 魔法鏡像
+                </h2>
+                <p class="text-xs text-gray-500 mb-4">觀察能量條形狀，切細了，總量不變！</p>
+            </div>
+
+            <div class="space-y-6 my-auto">
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                        <span>原本能量 (分母: <span id="visual-orig-den">3</span>)</span>
+                        <span class="text-purple-600 font-bold" id="visual-orig-fraction">2/3</span>
+                    </div>
+                    <div id="orig-bar-container" class="h-10 w-full bg-gray-100 rounded-lg flex overflow-hidden border border-gray-200">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                        <span>等值能量 (分母: <span id="visual-exp-den">?</span>)</span>
+                        <span class="text-pink-600 font-bold" id="visual-exp-fraction">?/12</span>
+                    </div>
+                    <div id="exp-bar-container" class="h-10 w-full bg-gray-100 rounded-lg flex overflow-hidden border border-gray-200">
+                    </div>
+                </div>
+            </div>
+            <div class="bg-purple-50 rounded-xl p-3 text-xs text-purple-700 mt-4">
+                💡 擴分就是「切更細，拿更多，蛋糕總量完全沒變！」
+            </div>
+        </div>
+
+        <div id="puzzle-box" class="lg:col-span-7 bg-white rounded-3xl p-6 md:p-8 shadow-lg border-2 border-purple-200 magic-glow flex flex-col h-full justify-between min-h-[420px]">
+            <div class="text-center">
+                <div id="step-badge" class="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full mb-2">
+                    步驟一：尋找倍數
+                </div>
+                <h3 id="instruction" class="text-lg font-bold text-gray-800">分母擴大幾倍？</h3>
+            </div>
+            <div class="flex items-center justify-center gap-6 md:gap-10 my-8">
+                <div class="flex flex-col items-center justify-center w-20">
+                    <div id="orig-num" class="text-4xl font-bold text-gray-700">2</div>
+                    <div class="fraction-line w-16"></div>
+                    <div id="orig-den" class="text-4xl font-bold text-gray-700">3</div>
+                </div>
+                <div class="text-3xl font-bold text-purple-400">＝</div>
+                <div class="flex flex-col items-center justify-center w-24">
+                    <div id="target-num-box" class="w-20 h-14 border-2 border-dashed border-purple-300 rounded-xl flex items-center justify-center transition-all">
+                        <span id="target-num" class="text-3xl font-bold text-purple-600">?</span>
+                    </div>
+                    <div class="fraction-line w-20"></div>
+                    <div id="target-den-box" class="w-20 h-14 border-2 border-dashed border-purple-300 rounded-xl flex items-center justify-center transition-all">
+                        <span id="target-den" class="text-3xl font-bold text-purple-600">12</span>
+                    </div>
+                </div>
+            </div>
+            <div id="hint-bubble" class="bg-gray-50 border border-gray-100 rounded-2xl p-4 text-center text-sm text-gray-600 mb-6 min-h-[64px] flex items-center justify-center">
+            </div>
+            <div id="options-grid" class="grid grid-cols-2 gap-3">
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center text-xs text-gray-400 mt-2">
+        分數變形記 © 庭瑄專屬修煉系統
+    </div>
+
+    <div id="instructionModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white max-w-lg w-full rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-purple-400 flex flex-col justify-between min-h-[420px]">
+            
+            <div id="inst-page-1" class="space-y-4 inst-page-content">
+                <div class="text-center">
+                    <span class="text-6xl block mb-2">👕</span>
+                    <span class="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full">重點 1 / 3</span>
+                    <h2 class="text-2xl font-bold text-purple-800 mt-2">大魔王只是換了衣服！</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-center pt-2 text-base">
+                    庭瑄，國中的大數字分數看起來很醜對不對？<br><br>
+                    別被騙了！牠們只是穿上大衣服的「小怪」。本質沒變，魔法鏡能看穿牠們！
+                </p>
+            </div>
+
+            <div id="inst-page-2" class="space-y-4 inst-page-content hidden">
+                <div class="text-center">
+                    <span class="text-6xl block mb-2">⚖️</span>
+                    <span class="text-xs bg-pink-100 text-pink-700 font-bold px-3 py-1 rounded-full">重點 2 / 3</span>
+                    <h2 class="text-2xl font-bold text-pink-800 mt-2">上下乘一樣，絕對公平！</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-center pt-2 text-base">
+                    分數法律：<strong class="text-purple-700 font-bold">「下方分母乘了幾倍，上方分子就公平地乘相同的倍數！」</strong><br><br>
+                    只要公平，總量一模一樣！
+                </p>
+            </div>
+
+            <div id="inst-page-3" class="space-y-4 inst-page-content hidden">
+                <div class="text-center">
+                    <span class="text-6xl block mb-2">👁️</span>
+                    <span class="text-xs bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full">重點 3 / 3</span>
+                    <h2 class="text-2xl font-bold text-green-800 mt-2">用眼睛看見「等值」</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-center pt-2 text-base">
+                    左邊「能量水晶」。答對時，格子切得更細、份數變多，但總長度沒變。相信眼睛，擴分超簡單！
+                </p>
+            </div>
+
+            <div class="mt-8 flex gap-3">
+                <button id="inst-prev-btn" onclick="changePage(-1)" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 rounded-xl transition-all hidden">
+                    上一步
+                </button>
+                <button id="inst-next-btn" onclick="changePage(1)" class="flex-[2] bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 rounded-xl shadow-md transition-all active:scale-95">
+                    看下一個重點
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="endModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white max-w-md w-full rounded-3xl p-8 text-center shadow-2xl border-4 border-purple-300">
+            <span class="text-6xl mb-4 block">👑</span>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">擴分修煉完成！</h2>
+            <p class="text-gray-500 text-sm mb-6">妳對「等值變身」敏感度大幅提升！</p>
+            <div class="bg-purple-50 rounded-2xl p-4 mb-6">
+                <div class="text-sm text-purple-700 font-bold mb-1">修煉成果</div>
+                <div class="text-3xl font-bold text-purple-600"><span id="finalScore">0</span> 魔法值</div>
+            </div>
+            <button onclick="restartGame()" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-full text-lg shadow-lg">
+                重新修煉
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 題目庫
+        const levels = [
+            { origN: 1, origD: 2, mult: 3, focusOn: 'denominator' },
+            { origN: 2, origD: 3, mult: 4, focusOn: 'denominator' },
+            { origN: 3, origD: 5, mult: 2, focusOn: 'denominator' },
+            { origN: 1, origD: 4, mult: 5, focusOn: 'denominator' },
+            { origN: 2, origD: 5, mult: 3, focusOn: 'denominator' },
+            { origN: 3, origD: 4, mult: 3, focusOn: 'numerator' },
+            { origN: 1, origD: 6, mult: 4, focusOn: 'denominator' },
+            { origN: 2, origD: 7, mult: 3, focusOn: 'numerator' },
+            { origN: 5, origD: 6, mult: 5, focusOn: 'denominator' },
+            { origN: 3, origD: 8, mult: 3, focusOn: 'denominator' }
+        ];
+
+        let currentLevelIndex = 0;
+        let score = 0;
+        let gameStep = 1; 
+        let selectedMultiplier = 0;
+        let currentInstPage = 1;
+
+        // 【魔王解藥：程式邏輯修正】
+        function changePage(direction) {
+            // 先隱藏目前的頁面
+            document.getElementById(`inst-page-${currentInstPage}`).classList.add('hidden');
+            
+            // 計算新頁碼
+            currentInstPage += direction;
+            
+            // 重要修正：如果已經到了最後一頁的下一頁（第 4 頁）
+            if (currentInstPage === 4) {
+                // 關閉說明書，開始遊戲
+                document.getElementById('instructionModal').classList.add('hidden');
+                initGame();
+                return; // 直接離開，不要執行顯示頁面的動作
+            }
+            
+            // 【修正前斷線點】只有程式運行到這裡，才代表有合法的新頁面需要顯示
+            document.getElementById(`inst-page-${currentInstPage}`).classList.remove('hidden');
+            
+            // 按鈕狀態控制
+            if (currentInstPage === 1) {
+                document.getElementById('inst-prev-btn').classList.add('hidden');
+                document.getElementById('inst-next-btn').textContent = "看下一個重點";
+            } else if (currentInstPage === 2) {
+                document.getElementById('inst-prev-btn').classList.remove('hidden');
+                document.getElementById('inst-next-btn').textContent = "看下一個重點";
+            } else if (currentInstPage === 3) {
+                document.getElementById('inst-prev-btn').classList.remove('hidden');
+                document.getElementById('inst-next-btn').textContent = "進入魔法世界！";
+            }
+        }
+
+        // 初始化遊戲
+        function initGame() {
+            currentLevelIndex = 0;
+            score = 0;
+            document.getElementById('score').textContent = score;
+            loadLevel();
+        }
+
+        // 載入關卡
+        function loadLevel() {
+            gameStep = 1;
+            const q = levels[currentLevelIndex];
+            document.getElementById('currentRound').textContent = currentLevelIndex + 1;
+            document.getElementById('progressBar').style.width = `${(currentLevelIndex / 10) * 100}%`;
+            document.getElementById('orig-num').textContent = q.origN;
+            document.getElementById('orig-den').textContent = q.origD;
+
+            if (q.focusOn === 'denominator') {
+                document.getElementById('target-den').textContent = q.origD * q.mult;
+                document.getElementById('target-num').textContent = '?';
+                document.getElementById('target-den-box').className = "w-20 h-14 border-2 border-solid border-green-500 bg-green-50 rounded-xl flex items-center justify-center";
+                document.getElementById('target-num-box').className = "w-20 h-14 border-2 border-dashed border-purple-300 rounded-xl flex items-center justify-center";
+            } else {
+                document.getElementById('target-num').textContent = q.origN * q.mult;
+                document.getElementById('target-den').textContent = '?';
+                document.getElementById('target-num-box').className = "w-20 h-14 border-2 border-solid border-green-500 bg-green-50 rounded-xl flex items-center justify-center";
+                document.getElementById('target-den-box').className = "w-20 h-14 border-2 border-dashed border-purple-300 rounded-xl flex items-center justify-center";
+            }
+            updateVisualBars(q.origN, q.origD, false);
+            setupStep1();
+        }
+
+        function setupStep1() {
+            const q = levels[currentLevelIndex];
+            document.getElementById('step-badge').textContent = "步驟一：尋找倍數";
+            document.getElementById('step-badge').className = "inline-block px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full mb-2";
+            document.getElementById('instruction').textContent = (q.focusOn === 'denominator') ? "分母擴大幾倍？" : "分子擴大幾倍？";
+            
+            const hintPrefix = (q.focusOn === 'denominator') ? "下方分母：" : "上方分子：";
+            const oldV = (q.focusOn === 'denominator') ? q.origD : q.origN;
+            const newV = (q.focusOn === 'denominator') ? q.origD * q.mult : q.origN * q.mult;
+
+            document.getElementById('hint-bubble').innerHTML = `${hintPrefix}原本是 <span class="font-bold text-purple-600 text-lg">${oldV}</span>，現在變成了 <span class="font-bold text-purple-600 text-lg">${newV}</span>。請問是乘以多少呢？`;
+
+            const options = generateUniqueOptions(q.mult, [2, 3, 4, 5, 6]);
+            renderOptions(options, function(val) {
+                if (val === q.mult) {
+                    selectedMultiplier = q.mult;
+                    playSuccessEffect();
+                    score += 50;
+                    document.getElementById('score').textContent = score;
+                    setupStep2();
+                } else { playWrongEffect(); }
+            });
+        }
+
+        function setupStep2() {
+            gameStep = 2;
+            const q = levels[currentLevelIndex];
+            document.getElementById('step-badge').textContent = "步驟二：釋放魔法變身";
+            document.getElementById('step-badge').className = "inline-block px-3 py-1 bg-pink-100 text-pink-700 text-xs font-bold rounded-full mb-2";
+
+            const oldTargetV = (q.focusOn === 'denominator') ? q.origN : q.origD;
+            document.getElementById('instruction').textContent = `也要乘以一樣的 ${selectedMultiplier} 倍！`;
+            document.getElementById('hint-bubble').innerHTML = `公平原則：乘數是 <span class="font-bold text-pink-600 text-lg">${selectedMultiplier}</span>，這裏原本是 <span class="font-bold text-gray-700 text-lg">${oldTargetV}</span>，妳要乘以 <span class="font-bold text-pink-600 text-lg">${selectedMultiplier}</span>。答案是多少？`;
+            
+            const correctAns = oldTargetV * selectedMultiplier;
+            const initialList = (q.focusOn === 'denominator') ? [q.origN + selectedMultiplier, q.origN * 2] : [q.origD + selectedMultiplier, q.origD * 2];
+            const options = generateUniqueOptions(correctAns, [...initialList, correctAns - 1, correctAns + 2]);
+
+            renderOptions(options, function(val) {
+                if (val === correctAns) {
+                    const targetElId = (q.focusOn === 'denominator') ? 'target-num' : 'target-den';
+                    const targetBoxId = (q.focusOn === 'denominator') ? 'target-num-box' : 'target-den-box';
+                    document.getElementById(targetElId).textContent = correctAns;
+                    document.getElementById(targetBoxId).className = "w-20 h-14 border-2 border-solid border-pink-500 bg-pink-50 rounded-xl flex items-center justify-center scale-110 duration-200";
+                    score += 100;
+                    document.getElementById('score').textContent = score;
+                    playSuccessEffect();
+                    updateVisualBars(q.origN, q.origD, true);
+                    setTimeout(goToNextLevel, 2000);
+                } else { playWrongEffect(); }
+            });
+        }
+
+        function goToNextLevel() {
+            currentLevelIndex++;
+            if (currentLevelIndex < levels.length) { loadLevel();
+            } else { document.getElementById('progressBar').style.width = '100%'; document.getElementById('finalScore').textContent = score; document.getElementById('endModal').classList.remove('hidden'); }
+        }
+
+        function restartGame() { document.getElementById('endModal').classList.add('hidden'); initGame(); }
+        function generateUniqueOptions(correct, initialList) { let set = new Set(); set.add(correct); initialList.forEach(num => { if(num > 0 && num !== correct) set.add(num); }); while (set.size < 4) { set.add(correct + Math.floor(Math.random() * 5) + 1); } return Array.from(set).sort(() => Math.random() - 0.5); }
+        function renderOptions(options, callback) { const container = document.getElementById('options-grid'); container.innerHTML = ''; options.forEach(val => { const btn = document.createElement('button'); btn.className = "bg-white border-2 border-purple-100 hover:border-purple-400 hover:bg-purple-50 text-gray-700 font-bold py-3 px-4 rounded-2xl text-lg transition-all active:scale-95"; btn.textContent = val; btn.onclick = () => callback(val); container.appendChild(btn); }); }
+
+        function updateVisualBars(n, d, isExpanded) {
+            const origContainer = document.getElementById('orig-bar-container');
+            const expContainer = document.getElementById('exp-bar-container');
+            document.getElementById('visual-orig-den').textContent = d;
+            document.getElementById('visual-orig-fraction').textContent = `${n}/${d}`;
+            origContainer.innerHTML = '';
+            for (let i = 0; i < d; i++) {
+                const block = document.createElement('div'); block.className = `flex-1 h-full border-r last:border-0 border-white/60 visual-block ${i < n ? 'bg-gradient-to-br from-purple-400 to-purple-600' : 'bg-gray-100'}`; origContainer.appendChild(block);
+            }
+            expContainer.innerHTML = '';
+            const targetD = d * (isExpanded ? selectedMultiplier : 1);
+            const targetN = n * (isExpanded ? selectedMultiplier : 1);
+            document.getElementById('visual-exp-den').textContent = isExpanded ? targetD : '?';
+            document.getElementById('visual-exp-fraction').textContent = isExpanded ? `${targetN}/${targetD}` : `?/${d * selectedMultiplier}`;
+            for (let i = 0; i < targetD; i++) {
+                const block = document.createElement('div');
+                if (!isExpanded) { block.className = `flex-1 h-full border-r last:border-0 border-dashed border-gray-300 bg-gray-50`;
+                } else { block.className = `flex-1 h-full border-r last:border-0 border-white/60 visual-block ${i < targetN ? 'bg-gradient-to-br from-pink-400 to-pink-600' : 'bg-gray-100'}`; }
+                expContainer.appendChild(block);
+            }
+        }
+        function playSuccessEffect() { const flash = document.getElementById('hint-bubble'); flash.classList.add('bg-green-50', 'border-green-300'); setTimeout(() => { flash.classList.remove('bg-green-50', 'border-green-300'); }, 500); }
+        function playWrongEffect() { const box = document.getElementById('puzzle-box'); box.classList.add('border-red-400'); setTimeout(() => { box.classList.remove('border-red-400'); }, 300); }
+    </script>
+</body>
+</html>
