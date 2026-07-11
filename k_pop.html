@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>K-pop 獵魔女團：九九乘法魔法演唱會！</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #4c1d95 100%);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            touch-action: manipulation;
+        }
+        
+        .kpop-font {
+            font-family: 'ZCOOL KuaiLe', 'Fredoka One', sans-serif;
+        }
+
+        /* 霓虹發光特效 */
+        .neon-border-pink {
+            box-shadow: 0 0 15px #f43f5e, inset 0 0 10px #f43f5e;
+            border: 3px solid #fda4af;
+        }
+
+        .neon-border-purple {
+            box-shadow: 0 0 15px #a855f7, inset 0 0 10px #a855f7;
+            border: 3px solid #d8b4fe;
+        }
+
+        .neon-text-pink {
+            text-shadow: 0 0 10px #f43f5e, 0 0 20px #e11d48;
+        }
+
+        .neon-text-cyan {
+            text-shadow: 0 0 10px #22d3ee, 0 0 20px #0891b2;
+        }
+
+        /* 呼吸發光效果 */
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 15px #f43f5e); }
+        }
+
+        .pulse-char {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        /* 粒子與魔法效果容器 */
+        #particle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 40;
+        }
+
+        /* 應援棒揮舞動畫 */
+        @keyframes wave-stick {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(20deg); }
+        }
+
+        .light-stick-wave {
+            animation: wave-stick 1.5s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
+
+        /* 自定義按鈕縮放與觸感 */
+        .bubble-btn {
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bubble-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 滾動條美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f43f5e;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between items-center relative overflow-hidden">
+
+    <div id="particle-container"></div>
+
+    <!-- 頂部選單欄與狀態欄 -->
+    <header class="w-full max-w-4xl flex justify-between items-center p-3 z-30">
+        <div class="flex gap-2">
+            <button onclick="goToLobby()" class="bubble-btn bg-purple-900/80 hover:bg-purple-800 text-white px-4 py-2 rounded-2xl border-2 border-purple-500 shadow-lg text-sm flex items-center gap-1">
+                🏰 演唱會大廳
+            </button>
+            <button onclick="toggleAudio()" id="btn-audio" class="bubble-btn bg-pink-900/80 hover:bg-pink-800 text-white w-10 h-10 rounded-2xl border-2 border-pink-500 shadow-lg flex items-center justify-center text-lg">
+                🔊
+            </button>
+        </div>
+        <div class="bg-black/40 backdrop-blur px-5 py-2 rounded-2xl border border-pink-500/50 flex items-center gap-4 shadow-xl">
+            <span class="text-sm font-bold text-pink-300">💖 睿晴的應援能量：<span id="score-val" class="text-xl font-black text-white neon-text-pink">0</span></span>
+        </div>
+    </header>
+
+    <main class="w-full max-w-lg flex-grow flex flex-col justify-center items-center px-4 z-20 relative">
+
+        <!-- 1. 遊戲大廳：選擇魔女隊員與關卡 -->
+        <div id="screen-lobby" class="w-full bg-slate-900/90 backdrop-blur-md rounded-[2.5rem] border-4 border-purple-500 p-6 shadow-2xl flex flex-col gap-6 max-h-[85vh] overflow-y-auto">
+            <div class="text-center">
+                <span class="bg-pink-500 text-white text-xs font-black tracking-widest px-4 py-1 rounded-full uppercase">K-pop Witch Concert</span>
+                <h1 class="kpop-font text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-300 to-cyan-400 mt-2 filter drop-shadow">
+                    魔女乘法演唱會
+                </h1>
+                <p class="text-xs text-purple-200 mt-1">幫魔女團員唱出最完美的九九乘法和弦吧！</p>
+            </div>
+
+            <!-- 選擇魔女團員 (3選1) -->
+            <div>
+                <h3 class="text-pink-400 font-bold text-sm mb-3 flex items-center gap-2">
+                    <span>✨ 1. 挑選妳的最愛主推：</span>
+                </h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectWitch('rumi')" id="witch-rumi" class="bubble-btn bg-purple-950/60 border-2 border-transparent p-3 rounded-2xl flex flex-col items-center gap-2 relative group overflow-hidden">
+                        <div class="text-4xl filter drop-shadow">🔥</div>
+                        <span class="text-xs font-black text-rose-300">火焰 魯米</span>
+                        <div class="absolute inset-0 bg-rose-500/10 opacity-0 group-hover:opacity-100 transition"></div>
+                    </button>
+                    <button onclick="selectWitch('miya')" id="witch-miya" class="bubble-btn bg-purple-950/60 border-2 border-transparent p-3 rounded-2xl flex flex-col items-center gap-2 relative group overflow-hidden">
+                        <div class="text-4xl filter drop-shadow">⚡</div>
+                        <span class="text-xs font-black text-amber-300">閃電 美雅</span>
+                        <div class="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition"></div>
+                    </button>
+                    <button onclick="selectWitch('lily')" id="witch-lily" class="bubble-btn bg-purple-950/60 border-2 border-transparent p-3 rounded-2xl flex flex-col items-center gap-2 relative group overflow-hidden">
+                        <div class="text-4xl filter drop-shadow">❄️</div>
+                        <span class="text-xs font-black text-cyan-300">冰雪 莉莉</span>
+                        <div class="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition"></div>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-pink-400 font-bold text-sm mb-3 flex items-center gap-2">
+                    <span>🎯 2. 選擇想要特訓的乘法：</span>
+                </h3>
+                <div class="grid grid-cols-4 gap-2">
+                    <!-- 生成 2~9 的選關按鈕 -->
+                    <button onclick="selectLevel(2)" id="btn-lv-2" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">2 的段</button>
+                    <button onclick="selectLevel(3)" id="btn-lv-3" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">3 的段</button>
+                    <button onclick="selectLevel(4)" id="btn-lv-4" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">4 的段</button>
+                    <button onclick="selectLevel(5)" id="btn-lv-5" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">5 的段</button>
+                    <button onclick="selectLevel(6)" id="btn-lv-6" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">6 的段</button>
+                    <button onclick="selectLevel(7)" id="btn-lv-7" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">7 的段</button>
+                    <button onclick="selectLevel(8)" id="btn-lv-8" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">8 的段</button>
+                    <button onclick="selectLevel(9)" id="btn-lv-9" class="bubble-btn py-3 rounded-xl bg-purple-900/40 border border-purple-500 text-lg font-black hover:bg-pink-500 hover:text-white transition">9 的段</button>
+                </div>
+                <!-- 綜合大挑戰 -->
+                <button onclick="selectLevel('all')" id="btn-lv-all" class="bubble-btn w-full mt-3 py-4 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 text-white font-black text-lg shadow-lg hover:shadow-pink-500/20 hover:scale-[1.02] transition">
+                    🌈 全魔女綜合大聯唱！
+                </button>
+            </div>
+
+            <button onclick="startGame()" class="bubble-btn w-full py-5 bg-gradient-to-r from-rose-500 to-purple-600 rounded-3xl text-2xl font-black shadow-2xl tracking-widest text-white border-2 border-pink-300">
+                🎤 開啟魔法演出！
+            </button>
+        </div>
+
+        <!-- 2. 演唱會演出主畫面 -->
+        <div id="screen-play" class="hidden w-full flex flex-col gap-4 items-center">
+            
+            <!-- 獵魔女舞台與小暗黑怪物 -->
+            <div class="w-full h-56 bg-black/40 backdrop-blur border-2 border-purple-500/50 rounded-[2.5rem] relative flex items-center justify-between p-6 shadow-2xl overflow-hidden">
+                <!-- 舞台燈光效果 -->
+                <div class="absolute top-0 left-1/4 w-32 h-full bg-gradient-to-b from-pink-500/20 to-transparent rotate-12 pointer-events-none"></div>
+                <div class="absolute top-0 right-1/4 w-32 h-full bg-gradient-to-b from-cyan-500/20 to-transparent -rotate-12 pointer-events-none"></div>
+
+                <!-- 選擇的主推魔女 -->
+                <div class="flex flex-col items-center z-10">
+                    <div id="play-witch-avatar" class="text-7xl pulse-char mb-1 filter drop-shadow-[0_4px_10px_rgba(244,63,94,0.6)]">🔥</div>
+                    <div id="play-witch-name" class="bg-pink-500/80 text-white text-xs font-bold px-3 py-0.5 rounded-full">主唱 魯米</div>
+                </div>
+
+                <!-- 炫酷乘法算式液晶屏 -->
+                <div class="flex flex-col items-center bg-purple-950/80 px-6 py-4 rounded-3xl border-2 border-cyan-400 shadow-lg min-w-[140px] z-10">
+                    <span class="text-xs font-bold text-cyan-300 tracking-wider mb-1">下一句歌詞</span>
+                    <span id="formula-display" class="kpop-font text-3xl font-black text-white neon-text-cyan">2 × 3 = ?</span>
+                </div>
+
+                <!-- 搗蛋小惡魔 (噪音怪獸) -->
+                <div class="flex flex-col items-center z-10 relative">
+                    <div id="monster-avatar" class="text-6xl transition-all duration-300 filter drop-shadow-[0_4px_10px_rgba(168,85,247,0.6)]">👾</div>
+                    <span class="bg-purple-600/80 text-purple-200 text-xs px-2 py-0.5 rounded-full mt-1">舞台噪怪</span>
+                </div>
+            </div>
+
+            <!-- 四選一魔法音符答題卡 -->
+            <div class="w-full grid grid-cols-2 gap-4">
+                <button onclick="submitAnswer(this)" class="bubble-btn p-5 bg-slate-900/80 border-2 border-purple-500/50 rounded-3xl text-3xl font-black text-white shadow-lg hover:border-pink-500 hover:bg-slate-800 flex flex-col items-center gap-1">
+                    <span class="option-num kpop-font neon-text-pink">6</span>
+                    <span class="text-xs text-purple-300 font-bold">♪ 唱出這個和弦</span>
+                </button>
+                <button onclick="submitAnswer(this)" class="bubble-btn p-5 bg-slate-900/80 border-2 border-purple-500/50 rounded-3xl text-3xl font-black text-white shadow-lg hover:border-pink-500 hover:bg-slate-800 flex flex-col items-center gap-1">
+                    <span class="option-num kpop-font neon-text-pink">8</span>
+                    <span class="text-xs text-purple-300 font-bold">♪ 唱出這個和弦</span>
+                </button>
+                <button onclick="submitAnswer(this)" class="bubble-btn p-5 bg-slate-900/80 border-2 border-purple-500/50 rounded-3xl text-3xl font-black text-white shadow-lg hover:border-pink-500 hover:bg-slate-800 flex flex-col items-center gap-1">
+                    <span class="option-num kpop-font neon-text-pink">12</span>
+                    <span class="text-xs text-purple-300 font-bold">♪ 唱出這個和弦</span>
+                </button>
+                <button onclick="submitAnswer(this)" class="bubble-btn p-5 bg-slate-900/80 border-2 border-purple-500/50 rounded-3xl text-3xl font-black text-white shadow-lg hover:border-pink-500 hover:bg-slate-800 flex flex-col items-center gap-1">
+                    <span class="option-num kpop-font neon-text-pink">15</span>
+                    <span class="text-xs text-purple-300 font-bold">♪ 唱出這個和弦</span>
+                </button>
+            </div>
+
+            <!-- 應援區魔女應援棒 🪄 -->
+            <div class="mt-2 flex items-center justify-center gap-2">
+                <div class="text-4xl light-stick-wave filter drop-shadow-[0_0_8px_#f43f5e]">🪄</div>
+                <div class="bg-white/10 backdrop-blur px-4 py-2 rounded-2xl border border-white/10 text-center">
+                    <p id="hint-text" class="text-xs text-pink-300 font-bold">「睿晴，聽聽看團員讀的數字是什麼喔！」</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 圓滿完成演唱會 (結算彈窗) -->
+    <div id="modal-victory" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border-4 border-pink-500 rounded-[3rem] p-8 max-w-sm w-full text-center shadow-2xl flex flex-col items-center gap-6">
+            <div class="text-8xl animate-bounce">👑</div>
+            <h2 class="kpop-font text-3xl text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-yellow-300 font-black">演唱會圓滿成功！</h2>
+            <p class="text-purple-200 text-sm">
+                睿晴妳太棒了！妳跟獵魔女團合力用完美的九九乘法魔法，擊退了所有的噪怪！
+            </p>
+            <div class="bg-pink-950/40 border-2 border-pink-500 px-6 py-2 rounded-2xl">
+                <span class="text-xs font-bold text-pink-400">最終獲得應援：</span>
+                <span id="final-score" class="text-2xl font-black text-white">0</span>
+            </div>
+            <button onclick="goToLobby()" class="bubble-btn w-full py-4 bg-pink-500 text-white font-black text-xl rounded-full shadow-lg">
+                繼續下一場巡演
+            </button>
+        </div>
+    </div>
+
+    <!-- 頁尾裝飾線 -->
+    <footer class="w-full text-center py-2 text-[10px] text-purple-400/40 z-10 select-none">
+        K-Pop Witch Multi Concert &copy; For Rui-Qing's Math Adventure.
+    </footer>
+
+    <script>
+        // 核心狀態
+        let currentWitch = 'rumi'; // rumi, miya, lily
+        let selectedLevel = 'all'; // 2~9 or 'all'
+        let currentQuestion = { a: 2, b: 3, answer: 6 };
+        let score = 0;
+        let combo = 0;
+        let isAudioMuted = false;
+        let currentLevelCount = 0;
+        const totalQuestionsPerShow = 10; // 每回合答10題完成演唱會
+
+        // 音頻/合成器初始化 (Web Audio API)
+        let audioCtx = null;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // 播發自定義合成音效
+        function playSynthSound(type) {
+            initAudioContext();
+            if (isAudioMuted) return;
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // 歡樂高昂的三和弦
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'wrong') {
+                // 溫和下滑的低沈提醒音
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220.00, now); // A3
+                osc.frequency.exponentialRampToValueAtTime(110.00, now + 0.3);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'shoot') {
+                // 魔法射擊音
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(1500, now + 0.2);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        }
+
+        // 語音朗讀 (TTS) 智慧修復「乘（ㄔㄥˊ）」二聲發音
+        function speakText(text) {
+            if (isAudioMuted) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                // 經典破音字智慧修復：
+                // 將「乘」字置換成百分之百永遠發二聲「ㄔㄥˊ」的同音字「成」
+                // 這樣聽起來就是極度完美的台灣國語「二聲乘以」發音！
+                const spokenText = text.replace(/乘/g, '成');
+
+                const utterance = new SpeechSynthesisUtterance(spokenText);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 1.0; 
+                utterance.pitch = 1.3; // 帶點活力的高亮魔女音調
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 音訊切換開關
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const btn = document.getElementById('btn-audio');
+            if (isAudioMuted) {
+                btn.innerText = '🔇';
+                btn.classList.replace('bg-pink-900/80', 'bg-gray-800/80');
+                window.speechSynthesis.cancel();
+            } else {
+                btn.innerText = '🔊';
+                btn.classList.replace('bg-gray-800/80', 'bg-pink-900/80');
+                initAudioContext();
+            }
+        }
+
+        // 大廳：選擇魔女
+        function selectWitch(witch) {
+            currentWitch = witch;
+            const witches = ['rumi', 'miya', 'lily'];
+            witches.forEach(w => {
+                const element = document.getElementById(`witch-${w}`);
+                if (w === witch) {
+                    element.classList.add('neon-border-pink', 'bg-pink-950/40');
+                } else {
+                    element.classList.remove('neon-border-pink', 'bg-pink-950/40');
+                }
+            });
+            playSynthSound('shoot');
+        }
+
+        // 大廳：選擇關卡
+        function selectLevel(lv) {
+            selectedLevel = lv;
+            // 更新按鈕外觀
+            const btnIds = [2, 3, 4, 5, 6, 7, 8, 9];
+            btnIds.forEach(id => {
+                const btn = document.getElementById(`btn-lv-${id}`);
+                if (id === lv) {
+                    btn.classList.add('bg-pink-500', 'text-white', 'neon-border-pink');
+                } else {
+                    btn.classList.remove('bg-pink-500', 'text-white', 'neon-border-pink');
+                }
+            });
+
+            const btnAll = document.getElementById('btn-lv-all');
+            if (lv === 'all') {
+                btnAll.classList.add('neon-border-pink', 'scale-[1.02]');
+            } else {
+                btnAll.classList.remove('neon-border-pink', 'scale-[1.02]');
+            }
+            playSynthSound('shoot');
+        }
+
+        // 回大廳
+        function goToLobby() {
+            document.getElementById('screen-lobby').classList.remove('hidden');
+            document.getElementById('screen-play').classList.add('hidden');
+            document.getElementById('modal-victory').classList.add('hidden');
+            window.speechSynthesis.cancel();
+        }
+
+        // 開始演出
+        function startGame() {
+            initAudioContext();
+            document.getElementById('screen-lobby').classList.add('hidden');
+            document.getElementById('screen-play').classList.remove('hidden');
+            
+            // 載入所選魔女形象
+            const avatar = document.getElementById('play-witch-avatar');
+            const nameLabel = document.getElementById('play-witch-name');
+            if (currentWitch === 'rumi') {
+                avatar.innerText = '🧙‍♀️🔥';
+                nameLabel.innerText = '火焰 魯米';
+                nameLabel.className = "bg-rose-600 text-white text-xs font-bold px-3 py-0.5 rounded-full";
+            } else if (currentWitch === 'miya') {
+                avatar.innerText = '🧙‍♀️⚡';
+                nameLabel.innerText = '閃電 美雅';
+                nameLabel.className = "bg-amber-500 text-black text-xs font-bold px-3 py-0.5 rounded-full";
+            } else {
+                avatar.innerText = '🧙‍♀️❄️';
+                nameLabel.innerText = '冰雪 莉莉';
+                nameLabel.className = "bg-cyan-500 text-black text-xs font-bold px-3 py-0.5 rounded-full";
+            }
+
+            score = 0;
+            currentLevelCount = 0;
+            document.getElementById('score-val').innerText = score;
+
+            // 驚喜開場白
+            const witchName = nameLabel.innerText;
+            speakText(`哈囉睿晴！我是${witchName}，我們一起來挑戰九九乘法演唱會吧！`);
+
+            generateQuestion();
+        }
+
+        // 生成乘法題目
+        function generateQuestion() {
+            let a, b;
+            if (selectedLevel === 'all') {
+                a = Math.floor(Math.random() * 8) + 2; // 2 ~ 9
+            } else {
+                a = parseInt(selectedLevel);
+            }
+            b = Math.floor(Math.random() * 8) + 2; // 2 ~ 9
+
+            currentQuestion = {
+                a: a,
+                b: b,
+                answer: a * b
+            };
+
+            // 液晶屏顯示題目
+            document.getElementById('formula-display').innerText = `${a} × ${b} = ?`;
+
+            // 魔女出題語音
+            setTimeout(() => {
+                speakText(`睿晴，請問 ${a} 乘以 ${b} 等於多少呢？`);
+            }, 500);
+
+            // 生成隨機干擾答案
+            let options = [currentQuestion.answer];
+            while (options.length < 4) {
+                // 生成附近的數字
+                let offset = Math.floor(Math.random() * 7) - 3; // -3 ~ +3
+                let wrongVal = (a * (b + offset));
+                if (wrongVal <= 0 || wrongVal > 81) {
+                    wrongVal = Math.floor(Math.random() * 70) + 10;
+                }
+                if (!options.includes(wrongVal)) {
+                    options.push(wrongVal);
+                }
+            }
+
+            // 打亂答案選項
+            options.sort(() => Math.random() - 0.5);
+
+            // 渲染到按鈕
+            const optionElements = document.querySelectorAll('.option-num');
+            optionElements.forEach((el, index) => {
+                el.innerText = options[index];
+                // 還原按鈕樣式
+                const btn = el.closest('button');
+                btn.className = "bubble-btn p-5 bg-slate-900/80 border-2 border-purple-500/50 rounded-3xl text-3xl font-black text-white shadow-lg hover:border-pink-500 hover:bg-slate-800 flex flex-col items-center gap-1";
+            });
+
+            // 恢復怪物的預設外觀
+            const monster = document.getElementById('monster-avatar');
+            monster.innerText = ['👾', '👿', '👽', '🦖'][Math.floor(Math.random() * 4)];
+            monster.style.transform = 'scale(1)';
+        }
+
+        // 提交答案
+        function submitAnswer(buttonElement) {
+            const selectedVal = parseInt(buttonElement.querySelector('.option-num').innerText);
+            const monster = document.getElementById('monster-avatar');
+
+            if (selectedVal === currentQuestion.answer) {
+                // 答對了
+                playSynthSound('correct');
+                playSynthSound('shoot');
+                createMagicParticles(buttonElement);
+                
+                // 魔女高興的對話
+                const compliments = ["太棒了睿晴！", "好厲害！答對了！", "睿晴太優秀了！", "完美的和弦！"];
+                const randomCompliment = compliments[Math.floor(Math.random() * compliments.length)];
+                speakText(`${randomCompliment}，答案就是 ${currentQuestion.answer}`);
+
+                // 怪物被擊退特效（快速縮小）
+                monster.style.transform = 'scale(0.2) rotate(180deg)';
+                score += 100;
+                document.getElementById('score-val').innerText = score;
+
+                // 按鈕綠色特效
+                buttonElement.className = "bubble-btn p-5 bg-emerald-950/80 border-2 border-emerald-400 rounded-3xl text-3xl font-black text-white shadow-lg flex flex-col items-center gap-1 neon-border-pink";
+
+                currentLevelCount++;
+                setTimeout(() => {
+                    if (currentLevelCount >= totalQuestionsPerShow) {
+                        endGame();
+                    } else {
+                        generateQuestion();
+                    }
+                }, 1500);
+
+            } else {
+                // 答錯了
+                playSynthSound('wrong');
+                speakText("睿晴，再想一想看喔！妳一定可以的！");
+
+                // 按鈕紅色抖動特效
+                buttonElement.className = "bubble-btn p-5 bg-rose-950/80 border-2 border-rose-500 rounded-3xl text-3xl font-black text-white shadow-lg flex flex-col items-center gap-1";
+                setTimeout(() => {
+                    buttonElement.className = "bubble-btn p-5 bg-slate-900/80 border-2 border-purple-500/50 rounded-3xl text-3xl font-black text-white shadow-lg hover:border-pink-500 hover:bg-slate-800 flex flex-col items-center gap-1";
+                }, 1200);
+            }
+        }
+
+        // 渲染魔女絢麗粒子特效
+        function createMagicParticles(targetEl) {
+            const container = document.getElementById('particle-container');
+            const rect = targetEl.getBoundingClientRect();
+            
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'absolute pointer-events-none rounded-full';
+                
+                // 絢麗霓虹色調：粉、黃、青
+                const colors = ['#ff007f', '#ffea00', '#00e5ff', '#b026ff'];
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                const size = Math.random() * 12 + 8;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.left = `${rect.left + rect.width / 2}px`;
+                particle.style.top = `${rect.top}px`;
+                
+                // 往四面八方飛散的物理速度
+                const velocityX = (Math.random() - 0.5) * 300;
+                const velocityY = (Math.random() - 0.8) * 300 - 150; 
+                
+                container.appendChild(particle);
+                
+                let currentX = rect.left + rect.width / 2;
+                let currentY = rect.top;
+                let opacity = 1;
+                
+                const interval = setInterval(() => {
+                    currentX += velocityX * 0.016;
+                    currentY += velocityY * 0.016;
+                    opacity -= 0.02;
+                    
+                    particle.style.left = `${currentX}px`;
+                    particle.style.top = `${currentY}px`;
+                    particle.style.opacity = opacity;
+                    
+                    if (opacity <= 0) {
+                        clearInterval(interval);
+                        particle.remove();
+                    }
+                }, 16);
+            }
+        }
+
+        // 結束演唱會（通關）
+        function endGame() {
+            document.getElementById('screen-play').classList.add('hidden');
+            document.getElementById('modal-victory').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            
+            speakText(`太棒了睿晴！演唱會圓滿成功！妳真的是最厲害的小魔女！`);
+        }
+
+        // 頁面初始化
+        window.onload = function() {
+            selectWitch('rumi');
+            selectLevel('all');
+        }
+    </script>
+</body>
+</html>
