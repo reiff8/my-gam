@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分數魔法島：約分與通分雙核心修煉場</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #faf5ff 100%);
+        }
+        .fraction-line {
+            height: 3px;
+            background-color: #4b5563;
+            width: 100%;
+            margin: 4px 0;
+        }
+        .card-anim {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-anim:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .popup-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 md:p-6 select-none">
+
+    <!-- 主選單大廳 (Dashboard) -->
+    <div id="lobby-screen" class="w-full max-w-4xl my-auto text-center space-y-8 py-8">
+        <div class="space-y-3">
+            <span class="text-6xl animate-bounce inline-block">🏝️</span>
+            <h1 class="text-4xl font-bold text-slate-800">分數魔法島</h1>
+            <p class="text-slate-500 max-w-md mx-auto text-sm md:text-base">
+                庭瑄，分數加減乘除很容易搞混對不對？<br>
+                別擔心！選一個魔法關卡，精靈會一步一步陪著你通關！
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto px-4">
+            <!-- 卡片 1：約分 -->
+            <div onclick="openTutorial('simplify')" class="card-anim bg-white rounded-3xl p-8 border-4 border-emerald-200 cursor-pointer text-left space-y-4 shadow-md">
+                <div class="flex justify-between items-center">
+                    <span class="text-4xl">⚡</span>
+                    <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">除法系魔法</span>
+                </div>
+                <h2 class="text-2xl font-bold text-emerald-800">1. 約分魔法鏡</h2>
+                <p class="text-slate-500 text-sm leading-relaxed">
+                    把看起來很重的大分數「同除以一個數」，進行瘦身壓縮，找出它最漂亮的真面目！
+                </p>
+                <div class="pt-4 text-emerald-600 font-bold text-sm flex items-center gap-1">
+                    進入修煉場 →
+                </div>
+            </div>
+
+            <!-- 卡片 2：通分 -->
+            <div onclick="openTutorial('common')" class="card-anim bg-white rounded-3xl p-8 border-4 border-indigo-200 cursor-pointer text-left space-y-4 shadow-md">
+                <div class="flex justify-between items-center">
+                    <span class="text-4xl">⚖️</span>
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">乘法系魔法</span>
+                </div>
+                <h2 class="text-2xl font-bold text-indigo-800">2. 通分天平營</h2>
+                <p class="text-slate-500 text-sm leading-relaxed">
+                    當兩個分數想要「相加減」時，必須先用乘法把分母對齊。學會找出相同的分母基地！
+                </p>
+                <div class="pt-4 text-indigo-600 font-bold text-sm flex items-center gap-1">
+                    進入訓練營 →
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 魔法引導說明書彈窗 -->
+    <div id="tutorial-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div id="tutorial-card" class="bg-white max-w-lg w-full rounded-3xl p-6 md:p-8 shadow-2xl border-4 flex flex-col justify-between min-h-[450px]">
+            <!-- 約分說明書頁面 -->
+            <div id="simp-tut-1" class="space-y-4 tut-content hidden">
+                <div class="text-center">
+                    <span class="text-6xl block mb-2">👚</span>
+                    <span class="text-xs bg-emerald-100 text-emerald-700 font-bold px-3 py-1 rounded-full">約分祕訣 1 / 2</span>
+                    <h2 class="text-2xl font-bold text-emerald-800 mt-2">分數也要穿緊身衣！</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-center pt-2 text-base">
+                    庭瑄，大分數就像穿了特大號衣服的小怪，看起來很可怕對不對？<br><br>
+                    「約分」就是幫它脫掉厚重衣服、穿上緊身衣。數值大小完全不變，但看起來變得超苗條、超好算！
+                </p>
+            </div>
+            <div id="simp-tut-2" class="space-y-4 tut-content hidden">
+                <div class="text-center">
+                    <span class="text-6xl block mb-2">✂️</span>
+                    <span class="text-xs bg-emerald-100 text-emerald-700 font-bold px-3 py-1 rounded-full">約分祕訣 2 / 2</span>
+                    <h2 class="text-2xl font-bold text-emerald-800 mt-2">上下同除，絕對公平！</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-center pt-2 text-base">
+                    約分的唯一魔法法則：<strong class="text-emerald-600 font-bold">「分子和分母，必須同除以一樣的數字！」</strong><br><br>
+                    只要上下除以相同的數，分數就成功變身囉！我們等一下用九九乘法表來找出這個「魔法除數」吧！
+                </p>
+            </div>
+
+            <!-- 通分說明書頁面 -->
+            <div id="comm-tut-1" class="space-y-4 tut-content hidden">
+                <div class="text-center">
+                    <span class="text-6xl block mb-2">⚔️</span>
+                    <span class="text-xs bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full">通分祕訣 1 / 2</span>
+                    <h2 class="text-2xl font-bold text-indigo-800 mt-2">分母不同，絕對不能加減！</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-center pt-2 text-base">
+                    分數王國有嚴格的規定：<strong class="text-red-500 font-bold">「樓下的分母如果不一樣，就絕對不能相加或相減！」</strong><br><br>
+                    通分，就是找出分母們的「公倍數」，幫她們建立一個「一模一樣的分母基地」！
+                </p>
+            </div>
+            <div id="comm-tut-2" class="space-y-4 tut-content hidden">
+                <div class="text-center">
+                    <span class="text-6xl block mb-2">⚖️</span>
+                    <span class="text-xs bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full">通分祕訣 2 / 2</span>
+                    <h2 class="text-2xl font-bold text-indigo-800 mt-2">公平放大原則！</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed text-center pt-2 text-base">
+                    分數公平法律：<br><strong class="text-indigo-600 font-bold">「如果分母（樓下）變大乘了幾倍，分子（樓上）就必須公平地乘上相同的倍數！」</strong><br><br>
+                    只要保持公平，分數變身後，長度跟份量完全不會縮水喔！
+                </p>
+            </div>
+
+            <!-- 控制按鈕 -->
+            <div class="mt-8 flex gap-3">
+                <button id="tut-prev-btn" onclick="nextTutorialPage(-1)" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 rounded-xl transition-all hidden">
+                    上一步
+                </button>
+                <button id="tut-next-btn" onclick="nextTutorialPage(1)" class="flex-[2] bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-slate-950 text-white font-bold py-3 rounded-xl shadow-md transition-all active:scale-95">
+                    看下一個重點
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遊戲介面：約分魔法鏡 (Simplify Mode) -->
+    <div id="simplify-game" class="w-full max-w-3xl bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-emerald-300 hidden my-auto flex flex-col justify-between min-h-[500px]">
+        <div class="flex justify-between items-center border-b pb-4 border-emerald-100 mb-4">
+            <button onclick="goLobby()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-4 py-2 rounded-xl transition-all">← 回大廳</button>
+            <div class="text-emerald-700 font-bold">
+                約分魔法鏡：關卡 <span id="simp-round">1</span>/<span class="max-rounds-text">15</span>
+                <span id="simp-difficulty-badge" class="ml-2 text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">⭐ 基礎</span>
+            </div>
+            <div class="text-emerald-600 font-bold">魔法值: <span id="simp-score">0</span></div>
+        </div>
+
+        <!-- 難度升級通知橫幅 -->
+        <div id="simp-stage-banner" class="hidden transform -translate-y-4 opacity-0 transition-all duration-500 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold py-3 px-4 rounded-2xl text-center mb-4 shadow-lg animate-bounce">
+            🎉 難度突破！解鎖更強的魔法鏡像！
+        </div>
+
+        <div class="text-center py-4">
+            <span class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">找出共通的除數</span>
+            <h3 class="text-xl font-bold text-slate-800 mt-2">分子和分母，同時除以多少可以縮小？</h3>
+        </div>
+
+        <!-- 算式展示區 -->
+        <div class="flex items-center justify-center gap-6 my-6">
+            <!-- 原分數 -->
+            <div class="flex flex-col items-center justify-center w-24">
+                <div id="simp-orig-num" class="text-4xl font-bold text-slate-700">6</div>
+                <div class="fraction-line w-20 bg-emerald-500"></div>
+                <div id="simp-orig-den" class="text-4xl font-bold text-slate-700">8</div>
+            </div>
+            <!-- 除以 -->
+            <div class="text-2xl font-bold text-emerald-500">÷</div>
+            <!-- 除數框 -->
+            <div id="simp-divisor-box" class="w-16 h-16 border-4 border-dashed border-emerald-300 rounded-2xl flex items-center justify-center">
+                <span id="simp-divisor" class="text-3xl font-bold text-emerald-600">?</span>
+            </div>
+            <!-- 等於 -->
+            <div class="text-2xl font-bold text-slate-400">＝</div>
+            <!-- 結果分數 -->
+            <div class="flex flex-col items-center justify-center w-24">
+                <div id="simp-target-num" class="text-4xl font-bold text-emerald-600">?</div>
+                <div class="fraction-line w-20 bg-emerald-500"></div>
+                <div id="simp-target-den" class="text-4xl font-bold text-emerald-600">?</div>
+            </div>
+        </div>
+
+        <!-- 提示框 (陪伴精靈) -->
+        <div id="simp-hint" class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center text-sm text-emerald-800 min-h-[60px] flex items-center justify-center">
+            精靈載入中...
+        </div>
+
+        <!-- 按鈕區 -->
+        <div id="simp-options" class="grid grid-cols-2 gap-3 mt-6">
+            <!-- 動態生成 -->
+        </div>
+    </div>
+
+    <!-- 遊戲介面：通分天平營 (Common Denominator Mode) -->
+    <div id="common-game" class="w-full max-w-3xl bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-indigo-300 hidden my-auto flex flex-col justify-between min-h-[520px]">
+        <div class="flex justify-between items-center border-b pb-4 border-indigo-100 mb-4">
+            <button onclick="goLobby()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-4 py-2 rounded-xl transition-all">← 回大廳</button>
+            <div class="text-indigo-700 font-bold">
+                通分天平營：關卡 <span id="comm-round">1</span>/<span class="max-rounds-text">15</span>
+                <span id="comm-difficulty-badge" class="ml-2 text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold">⭐ 基礎</span>
+            </div>
+            <div class="text-indigo-600 font-bold">魔法值: <span id="comm-score">0</span></div>
+        </div>
+
+        <!-- 難度升級通知橫幅 -->
+        <div id="comm-stage-banner" class="hidden transform -translate-y-4 opacity-0 transition-all duration-500 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-4 rounded-2xl text-center mb-4 shadow-lg animate-bounce">
+            🎉 難度突破！解鎖更寬廣的分母基地！
+        </div>
+
+        <div class="text-center py-2">
+            <span id="comm-step-badge" class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">步驟一：對齊分母基地</span>
+            <h3 id="comm-instruction" class="text-lg font-bold text-slate-800 mt-2">分母是 2 和 3，共同的分母基地是多少？</h3>
+        </div>
+
+        <!-- 兩個分數對比區 -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-8 my-6">
+            <!-- 分數 A -->
+            <div class="flex items-center gap-3">
+                <div class="flex flex-col items-center justify-center w-16">
+                    <div id="comm-a-num" class="text-3xl font-bold text-slate-600">1</div>
+                    <div class="fraction-line w-14 bg-indigo-500"></div>
+                    <div id="comm-a-den" class="text-3xl font-bold text-slate-600">2</div>
+                </div>
+                <div class="text-xl font-bold text-indigo-400">➡️</div>
+                <div class="flex flex-col items-center justify-center w-16">
+                    <div id="comm-atarget-num" class="text-3xl font-bold text-indigo-600">?</div>
+                    <div class="fraction-line w-14 bg-indigo-500"></div>
+                    <div id="comm-atarget-den" class="text-3xl font-bold text-indigo-600">?</div>
+                </div>
+            </div>
+
+            <div class="hidden md:block h-12 w-0.5 bg-indigo-100"></div>
+
+            <!-- 分數 B -->
+            <div class="flex items-center gap-3">
+                <div class="flex flex-col items-center justify-center w-16">
+                    <div id="comm-b-num" class="text-3xl font-bold text-slate-600">1</div>
+                    <div class="fraction-line w-14 bg-indigo-500"></div>
+                    <div id="comm-b-den" class="text-3xl font-bold text-slate-600">3</div>
+                </div>
+                <div class="text-xl font-bold text-indigo-400">➡️</div>
+                <div class="flex flex-col items-center justify-center w-16">
+                    <div id="comm-btarget-num" class="text-3xl font-bold text-indigo-600">?</div>
+                    <div class="fraction-line w-14 bg-indigo-500"></div>
+                    <div id="comm-btarget-den" class="text-3xl font-bold text-indigo-600">?</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 輔助提示框 (陪伴精靈) -->
+        <div id="comm-hint" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center text-sm text-indigo-800 min-h-[60px] flex items-center justify-center">
+            精靈載入中...
+        </div>
+
+        <!-- 選項按鈕區 -->
+        <div id="comm-options" class="grid grid-cols-2 gap-3 mt-4">
+            <!-- 動態生成 -->
+        </div>
+    </div>
+
+    <!-- 結算彈窗 -->
+    <div id="hub-endModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white max-w-md w-full rounded-3xl p-8 text-center shadow-2xl border-4 border-slate-300" id="modal-border">
+            <span class="text-6xl mb-4 block" id="modal-emoji">🏆</span>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2" id="modal-title">修煉完成！</h2>
+            <p class="text-gray-500 text-sm mb-6" id="modal-text">妳的魔法反應速度更上一層樓了！</p>
+            
+            <div class="bg-slate-50 rounded-2xl p-4 mb-6">
+                <div class="text-sm text-slate-500 font-bold mb-1">本次獲得魔法值</div>
+                <div class="text-3xl font-bold text-slate-700" id="modal-score">0</div>
+            </div>
+
+            <button onclick="goLobby()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-lg transition-all active:scale-95">
+                返回大廳
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 核心資料與控制邏輯
+        // ==========================================
+        let currentMode = 'lobby'; // lobby, simplify, common
+        let score = 0;
+        let round = 0;
+        const maxRounds = 15; // 升級為 15 關
+
+        // 說明書引導狀態
+        let tutMode = 'simplify'; // simplify, common
+        let tutPage = 1;
+
+        // 最大公因數
+        function gcd(a, b) {
+            while (b) {
+                let t = b;
+                b = a % b;
+                a = t;
+            }
+            return a;
+        }
+
+        // 最小公倍數
+        function lcm(a, b) {
+            return (a * b) / gcd(a, b);
+        }
+
+        // 安全地動態生成 coprime pairs 避免死循環
+        function getCoprimePair(minD, maxD) {
+            let d = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
+            let n = Math.floor(Math.random() * (d - 1)) + 1;
+            while (gcd(n, d) !== 1) {
+                d = Math.floor(Math.random() * (maxD - minD + 1)) + minD;
+                n = Math.floor(Math.random() * (d - 1)) + 1;
+            }
+            return { n, d };
+        }
+
+        // 動態生成約分關卡
+        function generateSimplifyLevels() {
+            let list = [];
+            
+            // Stage 1: 基礎 (Rounds 1-5)
+            while(list.length < 5) {
+                const pair = getCoprimePair(3, 6);
+                let divPool = [2, 3, 5];
+                let divisor = divPool[Math.floor(Math.random() * divPool.length)];
+                let origN = pair.n * divisor;
+                let origD = pair.d * divisor;
+                
+                let options = [divisor];
+                while(options.length < 4) {
+                    let opt = Math.floor(Math.random() * 8) + 2; // 2 to 9
+                    if (!options.includes(opt) && (origN % opt !== 0 || origD % opt !== 0)) {
+                        options.push(opt);
+                    }
+                }
+                options.sort(() => Math.random() - 0.5);
+                list.push({ n: origN, d: origD, divisor: divisor, finalN: pair.n, finalD: pair.d, options: options });
+            }
+
+            // Stage 2: 中階 (Rounds 6-10)
+            while(list.length < 10) {
+                const pair = getCoprimePair(4, 8);
+                let divPool = [4, 5, 6, 8, 9, 10];
+                let divisor = divPool[Math.floor(Math.random() * divPool.length)];
+                let origN = pair.n * divisor;
+                let origD = pair.d * divisor;
+                
+                let options = [divisor];
+                while(options.length < 4) {
+                    let opt = Math.floor(Math.random() * 14) + 2; // 2 to 15
+                    if (!options.includes(opt) && (origN % opt !== 0 || origD % opt !== 0)) {
+                        options.push(opt);
+                    }
+                }
+                options.sort(() => Math.random() - 0.5);
+                list.push({ n: origN, d: origD, divisor: divisor, finalN: pair.n, finalD: pair.d, options: options });
+            }
+
+            // Stage 3: 挑戰 (Rounds 11-15)
+            while(list.length < 15) {
+                const pair = getCoprimePair(5, 11);
+                let divPool = [7, 8, 11, 12, 15];
+                let divisor = divPool[Math.floor(Math.random() * divPool.length)];
+                let origN = pair.n * divisor;
+                let origD = pair.d * divisor;
+                
+                let options = [divisor];
+                while(options.length < 4) {
+                    let opt = Math.floor(Math.random() * 20) + 2; // 2 to 21
+                    if (!options.includes(opt) && (origN % opt !== 0 || origD % opt !== 0)) {
+                        options.push(opt);
+                    }
+                }
+                options.sort(() => Math.random() - 0.5);
+                list.push({ n: origN, d: origD, divisor: divisor, finalN: pair.n, finalD: pair.d, options: options });
+            }
+            return list;
+        }
+
+        // 動態生成通分關卡
+        function generateCommonLevels() {
+            let list = [];
+            
+            // Stage 1: 基礎 (Rounds 1-5) - 小互質分母
+            const stage1Pairs = [[2,3], [3,4], [2,5], [3,5], [4,5], [2,7], [3,7]];
+            stage1Pairs.sort(() => Math.random() - 0.5);
+            for(let i = 0; i < 5; i++) {
+                let [aD, bD] = stage1Pairs[i];
+                let aN = Math.floor(Math.random() * (aD - 1)) + 1;
+                let bN = Math.floor(Math.random() * (bD - 1)) + 1;
+                let lcm_val = lcm(aD, bD);
+                list.push({ aN: aN, aD: aD, bN: bN, bD: bD, lcm: lcm_val, targetAN: aN * (lcm_val / aD), targetBN: bN * (lcm_val / bD) });
+            }
+
+            // Stage 2: 中階 (Rounds 6-10) - 有公因數的分母
+            const stage2Pairs = [[4,6], [6,8], [4,10], [6,9], [5,6], [5,8], [5,10]];
+            stage2Pairs.sort(() => Math.random() - 0.5);
+            for(let i = 0; i < 5; i++) {
+                let [aD, bD] = stage2Pairs[i];
+                let aN = Math.floor(Math.random() * (aD - 1)) + 1;
+                let bN = Math.floor(Math.random() * (bD - 1)) + 1;
+                let lcm_val = lcm(aD, bD);
+                list.push({ aN: aN, aD: aD, bN: bN, bD: bD, lcm: lcm_val, targetAN: aN * (lcm_val / aD), targetBN: bN * (lcm_val / bD) });
+            }
+
+            // Stage 3: 挑戰 (Rounds 11-15) - 較大分母
+            const stage3Pairs = [[8,12], [9,12], [10,15], [12,15], [8,15], [6,15], [12,18]];
+            stage3Pairs.sort(() => Math.random() - 0.5);
+            for(let i = 0; i < 5; i++) {
+                let [aD, bD] = stage3Pairs[i];
+                let aN = Math.floor(Math.random() * (aD - 1)) + 1;
+                let bN = Math.floor(Math.random() * (bD - 1)) + 1;
+                let lcm_val = lcm(aD, bD);
+                list.push({ aN: aN, aD: aD, bN: bN, bD: bD, lcm: lcm_val, targetAN: aN * (lcm_val / aD), targetBN: bN * (lcm_val / bD) });
+            }
+            return list;
+        }
+
+        let activeLevels = [];
+        let commStep = 1; // 1: 找LCM, 2: 算 A 的分子, 3: 算 B 的分子
+
+        // 紀錄難度通知狀態避免重複觸發
+        let simpStageShown6 = false;
+        let simpStageShown11 = false;
+        let commStageShown6 = false;
+        let commStageShown11 = false;
+
+        // 說明書開啟
+        function openTutorial(mode) {
+            tutMode = mode;
+            tutPage = 1;
+
+            // 隱藏所有說明書頁面
+            const elements = document.querySelectorAll('.tut-content');
+            elements.forEach(el => el.classList.add('hidden'));
+
+            const prefix = mode === 'simplify' ? 'simp' : 'comm';
+
+            // 顯示當前模式的第一頁
+            document.getElementById(`${prefix}-tut-1`).classList.remove('hidden');
+
+            // 調整彈窗主題邊框色
+            const card = document.getElementById('tutorial-card');
+            if (mode === 'simplify') {
+                card.className = "bg-white max-w-lg w-full rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-emerald-300 flex flex-col justify-between min-h-[450px]";
+            } else {
+                card.className = "bg-white max-w-lg w-full rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-indigo-300 flex flex-col justify-between min-h-[450px]";
+            }
+
+            // 初始化按鈕
+            document.getElementById('tut-prev-btn').classList.add('hidden');
+            document.getElementById('tut-next-btn').textContent = "看下一個重點";
+            document.getElementById('tut-next-btn').className = "flex-[2] bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-slate-950 text-white font-bold py-3 rounded-xl shadow-md transition-all active:scale-95";
+
+            // 打開 Modal
+            document.getElementById('tutorial-modal').classList.remove('hidden');
+        }
+
+        // 說明書翻頁控制 (完美修復卡死問題)
+        function nextTutorialPage(dir) {
+            const prefix = tutMode === 'simplify' ? 'simp' : 'comm';
+
+            // 隱藏目前頁面
+            document.getElementById(`${prefix}-tut-${tutPage}`).classList.add('hidden');
+
+            tutPage += dir;
+
+            // 【完全修復！】判斷是否超出範圍
+            if (tutPage === 3) {
+                // 關閉說明書，正式開啟關卡
+                document.getElementById('tutorial-modal').classList.add('hidden');
+                switchMode(tutMode);
+                return;
+            }
+
+            // 顯示新頁面
+            document.getElementById(`${prefix}-tut-${tutPage}`).classList.remove('hidden');
+
+            // 動態微調按鈕樣式與文案
+            if (tutPage === 1) {
+                document.getElementById('tut-prev-btn').classList.add('hidden');
+                document.getElementById('tut-next-btn').textContent = "看下一個重點";
+                document.getElementById('tut-next-btn').className = "flex-[2] bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-slate-950 text-white font-bold py-3 rounded-xl shadow-md transition-all";
+            } else if (tutPage === 2) {
+                document.getElementById('tut-prev-btn').classList.remove('hidden');
+                document.getElementById('tut-next-btn').textContent = "進入魔法世界！";
+                const btnColor = tutMode === 'simplify' ? 'from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700' : 'from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700';
+                document.getElementById('tut-next-btn').className = `flex-[2] bg-gradient-to-r ${btnColor} text-white font-bold py-3 rounded-xl shadow-md transition-all active:scale-95`;
+            }
+        }
+
+        // 返回大廳
+        function goLobby() {
+            document.getElementById('lobby-screen').classList.remove('hidden');
+            document.getElementById('simplify-game').classList.add('hidden');
+            document.getElementById('common-game').classList.add('hidden');
+            document.getElementById('hub-endModal').classList.add('hidden');
+            currentMode = 'lobby';
+        }
+
+        // 模式切換邏輯
+        function switchMode(mode) {
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('simplify-game').classList.add('hidden');
+            document.getElementById('common-game').classList.add('hidden');
+            document.getElementById('hub-endModal').classList.add('hidden');
+
+            currentMode = mode;
+            score = 0;
+            round = 0;
+
+            // 設最大關卡總數顯示
+            const maxRoundsTexts = document.querySelectorAll('.max-rounds-text');
+            maxRoundsTexts.forEach(el => el.textContent = maxRounds);
+
+            if (mode === 'simplify') {
+                document.getElementById('simplify-game').classList.remove('hidden');
+                simpStageShown6 = false;
+                simpStageShown11 = false;
+                activeLevels = generateSimplifyLevels();
+                loadSimplifyRound();
+            } else if (mode === 'common') {
+                document.getElementById('common-game').classList.remove('hidden');
+                commStageShown6 = false;
+                commStageShown11 = false;
+                activeLevels = generateCommonLevels();
+                loadCommonRound();
+            }
+        }
+
+        // 顯示難度突破動態橫幅
+        function showStageUpgrade(mode, message) {
+            const banner = document.getElementById(`${mode}-stage-banner`);
+            banner.textContent = message;
+            banner.classList.remove('hidden');
+            
+            // 強制重繪觸發動畫
+            void banner.offsetWidth;
+            banner.classList.remove('opacity-0', '-translate-y-4');
+            banner.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                banner.classList.remove('opacity-100', 'translate-y-0');
+                banner.classList.add('opacity-0', '-translate-y-4');
+                setTimeout(() => {
+                    banner.classList.add('hidden');
+                }, 500);
+            }, 3500);
+        }
+
+        // ==========================================
+        // 約分模式邏輯 (Simplify Mode)
+        // ==========================================
+        let simpState = 1; // 1: 答除數, 2: 點擊看結果
+        let simpAttempts = 0;
+
+        function loadSimplifyRound() {
+            simpState = 1;
+            simpAttempts = 0;
+            const q = activeLevels[round];
+            
+            document.getElementById('simp-round').textContent = round + 1;
+            document.getElementById('simp-score').textContent = score;
+
+            // 動態更新難度星級與提示
+            const badge = document.getElementById('simp-difficulty-badge');
+            if (round < 5) {
+                badge.className = "ml-2 text-xs bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold";
+                badge.textContent = "⭐ 基礎";
+            } else if (round < 10) {
+                badge.className = "ml-2 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold";
+                badge.textContent = "⭐⭐ 中階挑戰";
+                if (!simpStageShown6) {
+                    showStageUpgrade('simp', '⭐⭐ 難度升級！開啟中階約分魔法！');
+                    simpStageShown6 = true;
+                }
+            } else {
+                badge.className = "ml-2 text-xs bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full font-bold animate-pulse";
+                badge.textContent = "⭐⭐⭐ 大師修煉";
+                if (!simpStageShown11) {
+                    showStageUpgrade('simp', '👑 終極大師挑戰！極限係數壓縮！');
+                    simpStageShown11 = true;
+                }
+            }
+
+            document.getElementById('simp-orig-num').textContent = q.n;
+            document.getElementById('simp-orig-den').textContent = q.d;
+
+            // 重置未知數
+            document.getElementById('simp-divisor').textContent = '?';
+            document.getElementById('simp-target-num').textContent = '?';
+            document.getElementById('simp-target-den').textContent = '?';
+            document.getElementById('simp-divisor-box').className = "w-16 h-16 border-4 border-dashed border-emerald-300 rounded-2xl flex items-center justify-center";
+
+            document.getElementById('simp-hint').className = "bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-center text-sm text-emerald-800 min-h-[60px] flex items-center justify-center";
+            document.getElementById('simp-hint').innerHTML = `🐾 <strong>精靈提示：</strong>庭瑄，請找出一個「魔法除數」，能同時整除 <span class="font-bold text-lg text-emerald-600">${q.n}</span> 和 <span class="font-bold text-lg text-emerald-600">${q.d}</span> 喔！`;
+
+            renderSimpOptions(q.options);
+        }
+
+        function renderSimpOptions(options) {
+            const container = document.getElementById('simp-options');
+            container.innerHTML = '';
+            options.forEach(val => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white border-2 border-emerald-100 hover:border-emerald-400 hover:bg-emerald-50 text-slate-700 font-bold py-4 px-4 rounded-2xl text-xl transition-all active:scale-95";
+                btn.textContent = `÷ ${val}`;
+                btn.onclick = () => checkSimpDivisor(val);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkSimpDivisor(selected) {
+            const q = activeLevels[round];
+            if (simpState !== 1) return;
+
+            if (selected === q.divisor) {
+                simpState = 2;
+                score += 100;
+                document.getElementById('simp-score').textContent = score;
+                
+                // 視覺回饋
+                document.getElementById('simp-divisor').textContent = q.divisor;
+                document.getElementById('simp-divisor-box').className = "w-16 h-16 border-4 border-solid border-emerald-500 bg-emerald-50 rounded-2xl flex items-center justify-center scale-110 duration-200";
+                
+                document.getElementById('simp-target-num').textContent = q.finalN;
+                document.getElementById('simp-target-den').textContent = q.finalD;
+
+                document.getElementById('simp-hint').className = "bg-emerald-100 border border-emerald-300 rounded-2xl p-4 text-center text-sm text-emerald-800 min-h-[60px] flex items-center justify-center font-bold";
+                document.getElementById('simp-hint').textContent = `✨ 太美了！上下同時除以 ${q.divisor}，分數成功穿上緊身衣變成了 ${q.finalN}/${q.finalD}！`;
+
+                // 2.5 秒後下一題
+                setTimeout(() => {
+                    round++;
+                    if (round < maxRounds) {
+                        loadSimplifyRound();
+                    } else {
+                        showEndModal("simplify", score);
+                    }
+                }, 2500);
+            } else {
+                simpAttempts++;
+                playWrongEffect('simplify');
+                const hintEl = document.getElementById('simp-hint');
+                hintEl.className = "bg-red-50 border border-red-200 rounded-2xl p-4 text-center text-sm text-red-800 min-h-[60px] flex items-center justify-center";
+                
+                // 動態引導：根據答錯次數給予九九乘法表提示
+                if (simpAttempts === 1) {
+                    hintEl.innerHTML = `🐾 <strong>精靈提示：</strong> 喔呀！${selected} 沒辦法「同時整除」分子和分母喔！試著想想看：${q.n} 和 ${q.d} 同時在「哪一個九九乘法表」裡有出現？`;
+                } else {
+                    hintEl.innerHTML = `🐾 <strong>九九乘法表魔法：</strong> 庭瑄，分子 ${q.n} 是 ${q.divisor}×${q.n / q.divisor}，分母 ${q.d} 是 ${q.divisor}×${q.d / q.divisor}。所以同時除以 <strong class="text-lg text-emerald-600">${q.divisor}</strong> 才能整除喔！再點一次試試看！`;
+                }
+            }
+        }
+
+        // ==========================================
+        // 通分模式邏輯 (Common Denominator Mode)
+        // ==========================================
+        let commAttempts = 0;
+
+        function loadCommonRound() {
+            commStep = 1;
+            commAttempts = 0;
+            const q = activeLevels[round];
+
+            document.getElementById('comm-round').textContent = round + 1;
+            document.getElementById('comm-score').textContent = score;
+
+            // 動態更新難度星級與提示
+            const badge = document.getElementById('comm-difficulty-badge');
+            if (round < 5) {
+                badge.className = "ml-2 text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full font-bold";
+                badge.textContent = "⭐ 基礎";
+            } else if (round < 10) {
+                badge.className = "ml-2 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold";
+                badge.textContent = "⭐⭐ 中階挑戰";
+                if (!commStageShown6) {
+                    showStageUpgrade('comm', '⭐⭐ 難度升級！開啟中階通分對齊！');
+                    commStageShown6 = true;
+                }
+            } else {
+                badge.className = "ml-2 text-xs bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full font-bold animate-pulse";
+                badge.textContent = "⭐⭐⭐ 大師修煉";
+                if (!commStageShown11) {
+                    showStageUpgrade('comm', '👑 終極大師挑戰！尋找巨大的公倍數！');
+                    commStageShown11 = true;
+                }
+            }
+
+            document.getElementById('comm-a-num').textContent = q.aN;
+            document.getElementById('comm-a-den').textContent = q.aD;
+            document.getElementById('comm-b-num').textContent = q.bN;
+            document.getElementById('comm-b-den').textContent = q.bD;
+
+            // 重置未知狀態
+            document.getElementById('comm-atarget-num').textContent = '?';
+            document.getElementById('comm-atarget-den').textContent = '?';
+            document.getElementById('comm-btarget-num').textContent = '?';
+            document.getElementById('comm-btarget-den').textContent = '?';
+
+            setupCommStep1();
+        }
+
+        // 步驟一：找出共同分母基地
+        function setupCommStep1() {
+            const q = activeLevels[round];
+            commAttempts = 0;
+            document.getElementById('comm-step-badge').className = "bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold";
+            document.getElementById('comm-step-badge').textContent = "步驟一：對齊分母基地";
+            document.getElementById('comm-instruction').textContent = `分母是 ${q.aD} 和 ${q.bD}，共同的分母基地（公倍數）是多少？`;
+            
+            document.getElementById('comm-hint').className = "bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center text-sm text-indigo-800 min-h-[60px] flex items-center justify-center";
+            document.getElementById('comm-hint').innerHTML = `🐾 <strong>精靈提示：</strong>庭瑄，請在下方選出一個能同時被 <span class="font-bold text-indigo-600">${q.aD}</span> 和 <span class="font-bold text-indigo-600">${q.bD}</span> 整除的最小公倍數！`;
+
+            // 生成 LCM 選項
+            const correctLcm = q.lcm;
+            const options = [correctLcm, correctLcm + q.aD, correctLcm + q.bD, q.aD * q.bD + 2].filter((v, i, self) => self.indexOf(v) === i).slice(0, 4);
+            while (options.length < 4) {
+                options.push(correctLcm + Math.floor(Math.random() * 5) + 1);
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            renderCommOptions(options, function(selected) {
+                if (selected === correctLcm) {
+                    score += 50;
+                    document.getElementById('comm-score').textContent = score;
+                    playSuccessEffect('common');
+
+                    // 分母同時變身
+                    document.getElementById('comm-atarget-den').textContent = q.lcm;
+                    document.getElementById('comm-btarget-den').textContent = q.lcm;
+
+                    // 前往步驟二
+                    setupCommStep2();
+                } else {
+                    commAttempts++;
+                    playWrongEffect('common');
+                    const hintEl = document.getElementById('comm-hint');
+                    hintEl.className = "bg-red-50 border border-red-200 rounded-2xl p-4 text-center text-sm text-red-800 min-h-[60px] flex items-center justify-center";
+                    
+                    if (commAttempts === 1) {
+                        hintEl.innerHTML = `🐾 <strong>精靈提示：</strong> 喔呀！${selected} 沒有在兩邊的乘法表裡同時撞衫喔。試著背背看 ${q.aD} 的乘法表與 ${q.bD} 的乘法表，看第一個相同的是誰？`;
+                    } else {
+                        hintEl.innerHTML = `🐾 <strong>精靈悄悄話：</strong> 試試看將分母直接相乘！${q.aD} × ${q.bD} 算算看是多少？或者是 ${correctLcm} 喔！選它看看！`;
+                    }
+                }
+            });
+        }
+
+        // 步驟二：算分數 A 的新分子
+        function setupCommStep2() {
+            commStep = 2;
+            commAttempts = 0;
+            const q = activeLevels[round];
+            document.getElementById('comm-step-badge').className = "bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-xs font-bold";
+            document.getElementById('comm-step-badge').textContent = "步驟二：公平放大左邊分子";
+            
+            const multA = q.lcm / q.aD;
+            document.getElementById('comm-instruction').textContent = `左邊分母乘了 ${multA} 倍，所以左邊分子 ${q.aN} 也要乘以 ${multA}！`;
+
+            document.getElementById('comm-hint').className = "bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center text-sm text-indigo-800 min-h-[60px] flex items-center justify-center";
+            document.getElementById('comm-hint').innerHTML = `🐾 <strong>精靈提示：</strong>公平法律！左邊分母從 ${q.aD} 變成了 ${q.lcm} （乘了 <span class="font-bold text-pink-600 text-lg">${multA}</span> 倍）。<br>所以上方分子 <span class="font-bold text-slate-700 text-lg">${q.aN}</span> 也要乘以 <span class="font-bold text-pink-600 text-lg">${multA}</span>。答案是多少？`;
+
+            const correctN = q.targetAN;
+            const options = [correctN, correctN + 1, q.aN * 2, correctN + 2].filter((v, i, self) => self.indexOf(v) === i).slice(0, 4);
+            options.sort(() => Math.random() - 0.5);
+
+            renderCommOptions(options, function(selected) {
+                if (selected === correctN) {
+                    score += 50;
+                    document.getElementById('comm-score').textContent = score;
+                    playSuccessEffect('common');
+
+                    document.getElementById('comm-atarget-num').textContent = correctN;
+
+                    // 前往步驟三
+                    setupCommStep3();
+                } else {
+                    commAttempts++;
+                    playWrongEffect('common');
+                    const hintEl = document.getElementById('comm-hint');
+                    hintEl.className = "bg-red-50 border border-red-200 rounded-2xl p-4 text-center text-sm text-red-800 min-h-[60px] flex items-center justify-center";
+                    
+                    if (commAttempts === 1) {
+                        hintEl.innerHTML = `🐾 <strong>公平天平提示：</strong> 哎呀！忘記乘倍數了嗎？分母乘了 ${multA} 倍，所以樓上分子 ${q.aN} 也要乘以 ${multA} 喔！`;
+                    } else {
+                        hintEl.innerHTML = `🐾 <strong>九九乘法提醒：</strong> ${q.aN} × ${multA} 等於多少呢？手指頭算算看，答案就在按鈕中喔！`;
+                    }
+                }
+            });
+        }
+
+        // 步驟三：算分數 B 的新分子
+        function setupCommStep3() {
+            commStep = 3;
+            commAttempts = 0;
+            const q = activeLevels[round];
+            document.getElementById('comm-step-badge').className = "bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold";
+            document.getElementById('comm-step-badge').textContent = "步驟三：公平放大右邊分子";
+            
+            const multB = q.lcm / q.bD;
+            document.getElementById('comm-instruction').textContent = `右邊分母乘了 ${multB} 倍，所以右邊分子 ${q.bN} 也要乘以 ${multB}！`;
+
+            document.getElementById('comm-hint').className = "bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center text-sm text-indigo-800 min-h-[60px] flex items-center justify-center";
+            document.getElementById('comm-hint').innerHTML = `🐾 <strong>精靈提示：</strong>右邊也是公平法律！下方分母從 ${q.bD} 變成了 ${q.lcm} （乘了 <span class="font-bold text-purple-600 text-lg">${multB}</span> 倍）。<br>所以上方分子 <span class="font-bold text-slate-700 text-lg">${q.bN}</span> 也要乘以 <span class="font-bold text-purple-600 text-lg">${multB}</span>。答案是多少？`;
+
+            const correctN = q.targetBN;
+            const options = [correctN, correctN + 1, q.bN * 2, correctN + 2].filter((v, i, self) => self.indexOf(v) === i).slice(0, 4);
+            options.sort(() => Math.random() - 0.5);
+
+            renderCommOptions(options, function(selected) {
+                if (selected === correctN) {
+                    score += 50;
+                    document.getElementById('comm-score').textContent = score;
+                    playSuccessEffect('common');
+
+                    document.getElementById('comm-btarget-num').textContent = correctN;
+
+                    document.getElementById('comm-hint').className = "bg-indigo-100 border border-indigo-300 rounded-2xl p-4 text-center text-sm text-indigo-800 min-h-[60px] flex items-center justify-center font-bold";
+                    document.getElementById('comm-hint').textContent = `🎉 太棒了！兩個分數成功變身為 ${q.targetAN}/${q.lcm} 和 ${q.targetBN}/${q.lcm}！分母完全對齊，現在可以進行加減了！`;
+
+                    setTimeout(() => {
+                        round++;
+                        if (round < maxRounds) {
+                            loadCommonRound();
+                        } else {
+                            showEndModal("common", score);
+                        }
+                    }, 2500);
+                } else {
+                    commAttempts++;
+                    playWrongEffect('common');
+                    const hintEl = document.getElementById('comm-hint');
+                    hintEl.className = "bg-red-50 border border-red-200 rounded-2xl p-4 text-center text-sm text-red-800 min-h-[60px] flex items-center justify-center";
+                    
+                    if (commAttempts === 1) {
+                        hintEl.innerHTML = `🐾 <strong>公平天平提示：</strong> 樓下乘了 ${multB} 倍，所以右邊樓上分子 ${q.bN} 也要公平地乘以 ${multB} 喔！`;
+                    } else {
+                        hintEl.innerHTML = `🐾 <strong>九九乘法提醒：</strong> ${q.bN} × ${multB} 是多少呢？找找看，選出正確答案吧！`;
+                    }
+                }
+            });
+        }
+
+        function renderCommOptions(options, callback) {
+            const container = document.getElementById('comm-options');
+            container.innerHTML = '';
+            options.forEach(val => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 text-slate-700 font-bold py-3 px-4 rounded-2xl text-lg transition-all active:scale-95";
+                btn.textContent = val;
+                btn.onclick = () => callback(val);
+                container.appendChild(btn);
+            });
+        }
+
+        // ==========================================
+        // 視覺特效與輔助機制
+        // ==========================================
+        function playSuccessEffect(mode) {
+            const hintBubbleId = mode === 'simplify' ? 'simp-hint' : 'comm-hint';
+            const bubble = document.getElementById(hintBubbleId);
+            bubble.classList.add('bg-green-50', 'border-green-300');
+            setTimeout(() => {
+                bubble.classList.remove('bg-green-50', 'border-green-300');
+            }, 500);
+        }
+
+        function playWrongEffect(mode) {
+            const gameBoxId = mode === 'simplify' ? 'simplify-game' : 'common-game';
+            const box = document.getElementById(gameBoxId);
+            const borderCol = 'border-red-400';
+            const defaultCol = mode === 'simplify' ? 'border-emerald-300' : 'border-indigo-300';
+            
+            box.classList.remove(defaultCol);
+            box.classList.add(borderCol, 'popup-shake');
+            setTimeout(() => {
+                box.classList.remove(borderCol, 'popup-shake');
+                box.classList.add(defaultCol);
+            }, 500);
+        }
+
+        function showEndModal(mode, finalScore) {
+            const modal = document.getElementById('hub-endModal');
+            const border = document.getElementById('modal-border');
+            const emoji = document.getElementById('modal-emoji');
+            const title = document.getElementById('modal-title');
+            const text = document.getElementById('modal-text');
+            const scoreDisp = document.getElementById('modal-score');
+
+            scoreDisp.textContent = finalScore;
+
+            if (mode === 'simplify') {
+                border.className = "bg-white max-w-md w-full rounded-3xl p-8 text-center shadow-2xl border-4 border-emerald-300";
+                emoji.textContent = "🔮";
+                title.textContent = "約分修煉完成！";
+                text.textContent = "庭瑄，妳成功看穿了分數的變形偽裝，約分魔法非常熟練喔！";
+            } else {
+                border.className = "bg-white max-w-md w-full rounded-3xl p-8 text-center shadow-2xl border-4 border-indigo-300";
+                emoji.textContent = "⚖️";
+                title.textContent = "通分訓練完成！";
+                text.textContent = "妳成功為兩個分數對齊了分母基地！現在分數加減再也難不倒妳了！";
+            }
+
+            modal.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
